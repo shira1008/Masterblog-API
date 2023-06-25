@@ -4,13 +4,15 @@
     "title": "Second post",
     "content": "This is the second post.",
     "author": "Your Name",
-    "date": "2023-06-08"
+    "date": "2023-06-08",
+    "likes": 0
   },
   {
     "author": "HELLO",
     "content": "This is the second post.",
     "date": "2023-06-07",
     "title": "hellololo",
+    "likes": 0,
     "id": 3
   },
   {
@@ -18,6 +20,7 @@
     "content": "hi ",
     "author": "snoop",
     "date": "2023-06-08",
+    "likes": 0,
     "id": 4
   }
 ]

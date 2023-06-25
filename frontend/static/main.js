@@ -47,12 +47,36 @@ function loadPosts() {
       data.forEach((post) => {
         const postDiv = document.createElement("div");
         postDiv.className = "post";
-        postDiv.innerHTML = `<h2>${post.title}</h2><p>${post.content}</p><p>${post.author}</p><p>${post.date}</p>
-                <button onclick="deletePost(${post.id})">Delete</button>`;
+        postDiv.innerHTML = `
+          <h2>${post.title}</h2>
+          <p>${post.content}</p>
+          <p>${post.author}</p>
+          <p>${post.date}</p>
+          <p>Likes: <span id="${post.id}">${post.likes}</span></p>
+          <button class="btn-like" onclick="incrementLikes(${post.id})">Like</button>
+          <button onclick="deletePost(${post.id})">Delete</button>
+        `;
         postContainer.appendChild(postDiv);
       });
     })
     .catch((error) => displayError(error, 2000)); // If an error occurs, log it to the UI
+}
+
+// Function to increment the number of likes for a specific post
+function incrementLikes(postId) {
+  var baseUrl = document.getElementById("api-base-url").value;
+  var url = baseUrl + "/posts/" + postId + "/likes";
+
+  // Use the Fetch API to send a POST request to the /api/posts/{postId}/likes endpoint
+  fetch(url, {
+    method: "POST",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      var likesElement = document.getElementById(postId);
+      likesElement.textContent = data.likes;
+    })
+    .catch((error) => displayError(error, 2000));
 }
 
 // Function to send a POST request to the API to add a new post
