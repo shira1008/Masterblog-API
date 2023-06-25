@@ -27,9 +27,15 @@ function loadPosts() {
   // Retrieve the base URL from the input field and save it to local storage
   var baseUrl = document.getElementById("api-base-url").value;
   localStorage.setItem("apiBaseUrl", baseUrl);
+  var url = baseUrl + "/posts";
+
+  // Add sorting parameters
+  var sort = document.getElementById("sort-select").value;
+  var direction = document.getElementById("direction-select").value;
+  url += "?sort=" + sort + "&direction=" + direction;
 
   // Use the Fetch API to send a GET request to the /posts endpoint
-  fetch(baseUrl + "/posts")
+  fetch(url)
     .then((response) => response.json()) // Parse the JSON data from the response
     .then((data) => {
       // Once the data is ready, we can use it

@@ -94,3 +94,9 @@ body {
   color: red;
   padding: 10px;
 }
+
+.sort_by {
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin: 10px;
+}

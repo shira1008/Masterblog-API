@@ -20,6 +20,16 @@
           placeholder="Enter API Base URL"
           value="http://127.0.0.1:5002/api"
         />
+
+        <select id="sort-select" class="sort_by">
+          <option value="title">Sort by Title</option>
+          <option value="author">Sort by Author</option>
+        </select>
+        <select id="direction-select" class="sort_by">
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+
         <button onclick="loadPosts()">Load Posts</button>
       </div>
       <div class="input-field">
