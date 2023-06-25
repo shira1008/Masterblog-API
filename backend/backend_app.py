@@ -19,6 +19,7 @@ def load_posts_from_file():
 
 
 def save_posts_to_file(posts):
+    """Save posts data to the JSON file."""
     try:
         with open(FILE_NAME, 'w') as file:
             json.dump(posts, file, indent=4)
@@ -28,7 +29,6 @@ def save_posts_to_file(posts):
         return jsonify({"error": "{e}"}), 400
 
 POSTS = load_posts_from_file()
-
 
 
 def validate_post_data(data):
@@ -42,16 +42,16 @@ def validate_post_data(data):
 
 
 def find_post_by_id(post_id):
-    """ Find the post with the id `post_id`.
-    If there is no post with this id, return None. """
+    """Find the post with the specified ID.
+    If there is no post with this ID, return None."""
     for post in POSTS:
-      if post["id"] == post_id:
-        return post
+        if post["id"] == post_id:
+            return post
     return None
 
 
 def convert_date_string(date_string):
-    """convert the str to a date object"""
+    """Convert the string to a date object."""
     try:
         date_object = datetime.strptime(date_string, "%Y-%m-%d").date()
         return date_object
@@ -59,69 +59,62 @@ def convert_date_string(date_string):
         return None
 
 
-
 @app.route('/api/posts', methods=['GET', 'POST'])
 def get_posts():
-  # if it's a POST request:
-  if request.method == 'POST':
-    new_post = request.get_json()
-    if not validate_post_data(new_post):
-      return jsonify({"error": "Invalid post data, you need to have title and content"}), 400
+    """Endpoint for retrieving and creating posts."""
+    if request.method == 'POST':
+        new_post = request.get_json()
+        if not validate_post_data(new_post):
+            return jsonify({"error": "Invalid post data, you need to have title and content"}), 400
 
-    # Generate a new ID for the post
-    if not POSTS:
-      new_id = 1
-    else:
-      new_id = max(post['id'] for post in POSTS) + 1
-    new_post['id'] = new_id
+        if not POSTS:
+            new_id = 1
+        else:
+            new_id = max(post['id'] for post in POSTS) + 1
+        new_post['id'] = new_id
 
-    new_post['date'] = convert_date_string(new_post['date'])
-    if new_post['date'] is None:
-      return jsonify({"error": "Invalid date format. Expected format: YYYY-MM-DD"}), 400
-    else:
-      new_post['date'] = new_post['date'].strftime("%Y-%m-%d")
-    # Add the new post
-    POSTS.append(new_post)
-   
+        new_post['date'] = convert_date_string(new_post['date'])
+        if new_post['date'] is None:
+            return jsonify({"error": "Invalid date format. Expected format: YYYY-MM-DD"}), 400
+        else:
+            new_post['date'] = new_post['date'].strftime("%Y-%m-%d")
 
-    save_posts_to_file(POSTS)
-    # print("Post saved to JSON file:", new_post)
-    return jsonify(new_post), 201
+        new_post['likes'] = 0
+        POSTS.append(new_post)
 
-  # if it's a GET request:
-  if request.method == 'GET':
-    sort_by = request.args.get('sort')
-    direction_by = request.args.get('direction')
-    if sort_by:
-      if sort_by in ["title", "content", "author", "date" ]:
-        sorted_posts = sorted(POSTS, key=lambda post: post[sort_by], reverse=(direction_by == "desc"))
-      else:
-        return jsonify({"error": "Invalid sort field. Available fields: title, content"}), 400
-      if direction_by not in ["asc", "desc"]:
-        return jsonify({"error": "Invalid direction value. Available values: asc, desc"}), 400
-    else:
-      sorted_posts = POSTS
+        save_posts_to_file(POSTS)
+        return jsonify(new_post), 201
 
-    return jsonify(sorted_posts), 200
+    if request.method == 'GET':
+        sort_by = request.args.get('sort')
+        direction_by = request.args.get('direction')
+        if sort_by:
+            if sort_by in ["title", "content", "author", "date"]:
+                sorted_posts = sorted(POSTS, key=lambda post: post[sort_by], reverse=(direction_by == "desc"))
+            else:
+                return jsonify({"error": "Invalid sort field. Available fields: title, content"}), 400
+            if direction_by not in ["asc", "desc"]:
+                return jsonify({"error": "Invalid direction value. Available values: asc, desc"}), 400
+        else:
+            sorted_posts = POSTS
 
+        return jsonify(sorted_posts), 200
 
 
 @app.route('/api/posts/<int:id>', methods=['DELETE'])
 def del_post(id):
-  post = find_post_by_id(id)
-  # If the post wasn't found, return a 404 error
-  if post is None:
-    return jsonify({"error": "Post not found"}), 404
-  # Remove the post from the list
-  POSTS.remove(post)
-  # save to storage
-  save_posts_to_file(POSTS)
-  # Return the deleted post
-  return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
+    """Endpoint for deleting a post with the specified ID."""
+    post = find_post_by_id(id)
+    if post is None:
+        return jsonify({"error": "Post not found"}), 404
+    POSTS.remove(post)
+    save_posts_to_file(POSTS)
+    return jsonify({"message": f"Post with id {id} has been deleted successfully."}), 200
 
 
 @app.route('/api/posts/<int:id>', methods=['PUT'])
 def update_post(id):
+    """Endpoint for updating a post with the specified ID."""
     post = find_post_by_id(id)
     if post is None:
         return jsonify({"error": "Post not found"}), 404
@@ -138,40 +131,49 @@ def update_post(id):
         if date_object is None:
             return jsonify({"error": "Invalid date format. Expected format: YYYY-MM-DD"}), 400
         post["date"] = date_object.strftime("%Y-%m-%d")
-    
+
     save_posts_to_file(POSTS)
     return jsonify(post), 200
 
 
-
 @app.route('/api/posts/search', methods=['GET'])
 def search_post():
-  title = request.args.get('title')
-  content = request.args.get('content')
-  author = request.args.get('author')
-  date = request.args.get('date')
-  filterd_posts = []
+    """Endpoint for searching posts by title, content, author, or date."""
+    title = request.args.get('title')
+    content = request.args.get('content')
+    author = request.args.get('author')
+    date = request.args.get('date')
+    filtered_posts = []
 
-  if title:
-    filterd_posts += [post for post in POSTS if post["title"].lower() == title.lower()]
-    return jsonify(filterd_posts),200
+    if title:
+        filtered_posts += [post for post in POSTS if post["title"].lower() == title.lower()]
+        return jsonify(filtered_posts), 200
 
-  if content:
-    filterd_posts += [post for post in POSTS if post["content"].lower() == content.lower()]
-    return jsonify(filterd_posts), 200
-  
-  if author:
-    filterd_posts += [post for post in POSTS if post["author"].lower() == author.lower()]
-    return jsonify(filterd_posts), 200
+    if content:
+        filtered_posts += [post for post in POSTS if post["content"].lower() == content.lower()]
+        return jsonify(filtered_posts), 200
 
-  if date:
-    filterd_posts += [post for post in POSTS if post["date"].lower() == date.lower()]
-    return jsonify(filterd_posts), 200
+    if author:
+        filtered_posts += [post for post in POSTS if post["author"].lower() == author.lower()]
+        return jsonify(filtered_posts), 200
+
+    if date:
+        filtered_posts += [post for post in POSTS if post["date"].lower() == date.lower()]
+        return jsonify(filtered_posts), 200
+
+    return jsonify(filtered_posts), 200
 
 
-  return jsonify(filterd_posts),200
-
-  
+@app.route("/api/posts/<int:post_id>/likes", methods=["POST"])
+def increment_likes(post_id):
+    """Endpoint for incrementing the likes count of a post by 1."""
+    post = find_post_by_id(post_id)
+    if post is not None:
+        post["likes"] += 1
+        save_posts_to_file(POSTS)
+        return jsonify({"likes": post["likes"]})
+    else:
+        return jsonify({"error": "Post not found"}), 404
 
 
 if __name__ == '__main__':
