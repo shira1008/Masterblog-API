@@ -9,6 +9,19 @@ window.onload = function () {
   }
 };
 
+// Function to display an error message on the UI
+function displayError(error, timeout = null) {
+  const errorContainer = document.getElementById("error-container");
+  errorContainer.textContent = "Error: " + error.message;
+
+  if (timeout !== null) {
+    // Set a timeout to remove the error message after the specified time interval
+    setTimeout(() => {
+      errorContainer.textContent = "";
+    }, timeout);
+  }
+}
+
 // Function to fetch all the posts from the API and display them on the page
 function loadPosts() {
   // Retrieve the base URL from the input field and save it to local storage
@@ -33,7 +46,7 @@ function loadPosts() {
         postContainer.appendChild(postDiv);
       });
     })
-    .catch((error) => console.error("Error:", error)); // If an error occurs, log it to the console
+    .catch((error) => displayError(error, 2000)); // If an error occurs, log it to the UI
 }
 
 // Function to send a POST request to the API to add a new post
@@ -56,12 +69,21 @@ function addPost() {
       date: postDate,
     }),
   })
-    .then((response) => response.json()) // Parse the JSON data from the response
-    .then((post) => {
-      console.log("Post added:", post);
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("HTTP error, status = " + response.status);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      // Handle successful response here
+      console.log("Post added:", data);
       loadPosts(); // Reload the posts after adding a new one
     })
-    .catch((error) => console.error("Error:", error)); // If an error occurs, log it to the console
+    .catch((error) => displayError(error, 2000));
 }
 
 // Function to send a DELETE request to the API to delete a post
